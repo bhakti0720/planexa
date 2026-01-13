@@ -99,8 +99,8 @@ export default function CoverageMap({ missionData }) {
     const dailyPasses = Math.floor((24 * 60) / periodMinutes) * satellites;
 
     // Calculate coverage percentage (based on constellation geometry)
-    const coveragePercent = data.constellation?.coverage_percent || 
-                           calculateCoveragePercentage(altitude, swathWidth, satellites);
+    const coveragePercent = data.constellation?.coverage_percent ||
+      calculateCoveragePercentage(altitude, swathWidth, satellites);
 
     const coverageStats = {
       swathWidth: swathWidth,
@@ -134,7 +134,7 @@ export default function CoverageMap({ missionData }) {
 
   return (
     <div className="space-y-4">
-      
+
       {/* Coverage Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <div className="bg-slate-800/50 rounded-lg p-3 border border-cyan-500/30">
@@ -171,7 +171,7 @@ export default function CoverageMap({ missionData }) {
             <span className="text-green-400 font-medium">{groundTracks.length}</span>
           </div>
         </div>
-        
+
         <div className="rounded-lg overflow-hidden border border-slate-600" style={{ height: '500px' }}>
           <MapContainer
             center={targetRegion?.center || [0, 0]}
@@ -294,8 +294,8 @@ export default function CoverageMap({ missionData }) {
       {/* Technical Info */}
       <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-500/30">
         <p className="text-xs text-blue-300 leading-relaxed">
-          💡 <strong>100% Real Data:</strong> Ground tracks calculated using SGP4 orbital propagation algorithm. 
-          Swath width based on altitude and sensor physics. Coverage circles show actual imaging footprint. 
+          <strong>100% Real Data:</strong> Ground tracks calculated using SGP4 orbital propagation algorithm.
+          Swath width based on altitude and sensor physics. Coverage circles show actual imaging footprint.
           All coordinates verified with GPS data. Orbital period from Kepler's 3rd law.
         </p>
       </div>

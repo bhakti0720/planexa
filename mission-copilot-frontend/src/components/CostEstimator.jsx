@@ -86,8 +86,8 @@ export default function CostEstimator({ missionData }) {
 
     // ===== CONTINGENCY =====
     // Standard 20% buffer
-    const subtotal = satelliteCostFinal + launchCost + totalGroundCost + 
-                     totalOpsCost + insuranceCost + developmentCost;
+    const subtotal = satelliteCostFinal + launchCost + totalGroundCost +
+      totalOpsCost + insuranceCost + developmentCost;
     const contingencyCost = subtotal * 0.20;
 
     // ===== TOTAL =====
@@ -294,7 +294,7 @@ export default function CostEstimator({ missionData }) {
       {/* Financing Note */}
       <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-500/30">
         <p className="text-xs text-blue-300">
-          💡 <strong>Tip:</strong> Many space agencies and private investors offer financing options. 
+          <strong>Tip:</strong> Many space agencies and private investors offer financing options.
           Typical payment plans spread costs over 3-5 years with 6-8% annual interest.
         </p>
       </div>

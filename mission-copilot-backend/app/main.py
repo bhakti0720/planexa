@@ -1,4 +1,4 @@
-from google import genai
+import google.generativeai as genai
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -16,9 +16,10 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 # Add validation
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY not found in environment variables!")
-# # Configure Gemini
-# GEMINI_API_KEY = "api_key"  # Replace with your key
-# client = genai.Client(api_key=GEMINI_API_KEY)
+
+# Configure Gemini
+genai.configure(api_key=GEMINI_API_KEY)
+client = genai.GenerativeModel('gemini-2.0-flash-exp')
 
 
 app = FastAPI(title="Mission Copilot - Live AI with Real Data")
@@ -124,8 +125,8 @@ def fetch_and_analyze_live_data():
             live_insights["crowded_altitudes"] = sorted(crowded)
 
             live_insights["sources_status"].append({
-                "name": "🟢 Celestrak - Active Satellites",
-                "status": "✅ Live",
+                "name": "Celestrak - Active Satellites",
+                "status": "Live",
                 "data_used": f"Analyzed {len(altitudes)} orbital altitudes",
                 "satellites_tracked": len(satellites)
             })
@@ -135,16 +136,16 @@ def fetch_and_analyze_live_data():
 
         else:
             live_insights["sources_status"].append({
-                "name": "🔴 Celestrak",
-                "status": "⚠️ Offline",
+                "name": "Celestrak",
+                "status": "Offline",
                 "data_used": "Using default parameters"
             })
             print(f"   ⚠️ Celestrak offline (status {response.status_code})")
 
     except Exception as e:
         live_insights["sources_status"].append({
-            "name": "🔴 Celestrak",
-            "status": "❌ Error",
+            "name": "Celestrak",
+            "status": "Error",
             "data_used": f"Error: {str(e)[:50]}"
         })
         print(f"   ❌ Celestrak error: {e}")
@@ -195,8 +196,8 @@ def fetch_and_analyze_live_data():
                 reasoning = "Normal solar conditions"
 
             live_insights["sources_status"].append({
-                "name": "🟢 NOAA Space Weather",
-                "status": "✅ Live",
+                "name": "NOAA Space Weather",
+                "status": "Live",
                 "data_used": f"Solar flux: {solar_flux} SFU",
                 "reasoning": reasoning
             })
@@ -205,16 +206,16 @@ def fetch_and_analyze_live_data():
 
         else:
             live_insights["sources_status"].append({
-                "name": "🔴 NOAA Space Weather",
-                "status": "⚠️ Offline",
+                "name": "NOAA Space Weather",
+                "status": "Offline",
                 "data_used": "Using nominal solar conditions"
             })
             print(f"   ⚠️ NOAA offline (status {response.status_code})")
 
     except Exception as e:
         live_insights["sources_status"].append({
-            "name": "🔴 NOAA Space Weather",
-            "status": "❌ Error",
+            "name": "NOAA Space Weather",
+            "status": "Error",
             "data_used": f"Error: {str(e)[:50]}"
         })
         print(f"   ❌ NOAA error: {e}")
@@ -234,8 +235,8 @@ def fetch_and_analyze_live_data():
         risk_note = "Low orbital congestion"
 
     live_insights["sources_status"].append({
-        "name": "📊 Debris Risk Analysis",
-        "status": "✅ Calculated",
+        "name": "Debris Risk Analysis",
+        "status": "Calculated",
         "data_used": risk_note
     })
 
@@ -563,10 +564,7 @@ def call_gemini_with_retry(prompt, max_retries=3):
         try:
             print(f"🤖 Gemini attempt {attempt + 1}/{max_retries}...")
 
-            response = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=prompt
-            )
+            response = client.generate_content(prompt)
 
             # Handle different response types
             text_response = None
@@ -743,7 +741,7 @@ IMPORTANT: Adjust altitude based on the live data context above. Avoid crowded a
         # Add data source badge
         mission_data["live_data_sources"].insert(0, {
             "name": "Gemini 2.5 Flash" if gemini_used else "Smart Parser",
-            "status": "🟢 Live" if gemini_used else "🟡 Fallback",
+            "status": "Live" if gemini_used else "Fallback",
             "note": "AI Mission Analysis" if gemini_used else "Rule-based analysis"
         })
 
@@ -759,7 +757,7 @@ IMPORTANT: Adjust altitude based on the live data context above. Avoid crowded a
         print(f"❌ JSON Parse Error: {e}")
         mission_data = parse_mission_fallback(request.userInput)
         mission_data["live_data_sources"] = [
-            {"name": "Fallback Parser", "status": "🟡 Active", "note": "JSON parse failed"}
+            {"name": "Fallback Parser", "status": "Active", "note": "JSON parse failed"}
         ]
         return mission_data
 

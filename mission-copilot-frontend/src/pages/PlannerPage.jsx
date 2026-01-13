@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { generateMission } from '../services/api';
 import ChatHistory from '../components/ChatHistory';
 import { missionStorage } from '../hooks/useLocalStorage';
-import { Download, RefreshCw, MessageSquare, Plus, Trash2, Send, Loader2, X, Menu } from 'lucide-react';
+import { Download, RefreshCw, MessageSquare, Plus, Trash2, Send, Loader2, X, Menu, Rocket, Lightbulb, Database, BarChart3, Clock, DollarSign, Map, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import CostEstimator from '../components/CostEstimator';
 import CoverageMap from '../components/CoverageMap';
 
@@ -18,7 +18,7 @@ export default function PlannerPage() {
   // Load chats from localStorage on mount
   useEffect(() => {
     const savedMissions = missionStorage.getAll();
-    
+
     if (savedMissions.length > 0) {
       // Convert old missions to chat format
       const convertedChats = savedMissions.map(mission => ({
@@ -75,19 +75,19 @@ export default function PlannerPage() {
   // Delete chat
   const handleDeleteChat = (chatId, e) => {
     if (e) e.stopPropagation();
-    
+
     if (chats.length === 1) {
       alert('Cannot delete the last chat');
       return;
     }
-    
+
     if (window.confirm('Delete this chat?')) {
       const updatedChats = chats.filter(c => c.id !== chatId);
       setChats(updatedChats);
-      
+
       // Delete from localStorage
       missionStorage.delete(chatId);
-      
+
       // Switch to first available chat
       if (activeChat === chatId) {
         setActiveChat(updatedChats[0].id);
@@ -160,7 +160,7 @@ export default function PlannerPage() {
         }
         return chat;
       });
-      
+
       setChats(finalChats);
 
       // Save to localStorage
@@ -225,25 +225,26 @@ export default function PlannerPage() {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-      
+
       {/* Sidebar - Chat List */}
       <div className={`${showSidebar ? 'w-80' : 'w-0'} bg-slate-800/50 backdrop-blur-xl border-r border-cyan-500/20 transition-all duration-300 overflow-hidden flex flex-col`}>
-        
+
         {/* Sidebar Header */}
         <div className="p-4 border-b border-slate-700">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="text-2xl">🚀</span>
+              <Rocket className="w-6 h-6 text-cyan-400" />
               Planexa AI
             </h2>
             <button
               onClick={() => setShowSidebar(false)}
-              className="lg:hidden text-gray-400 hover:text-white transition-colors"
+              className="text-gray-400 hover:text-white transition-colors"
+              aria-label="Close sidebar"
             >
-              <X className="w-5 h-5" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
           </div>
-          
+
           <button
             onClick={handleNewChat}
             className="w-full bg-cyan-600 hover:bg-cyan-500 text-white py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all font-medium"
@@ -259,11 +260,10 @@ export default function PlannerPage() {
             <div
               key={chat.id}
               onClick={() => setActiveChat(chat.id)}
-              className={`group p-3 rounded-lg cursor-pointer transition-all ${
-                activeChat === chat.id
+              className={`group p-3 rounded-lg cursor-pointer transition-all ${activeChat === chat.id
                   ? 'bg-cyan-600/30 border border-cyan-500/50'
                   : 'bg-slate-700/30 hover:bg-slate-700/50 border border-transparent'
-              }`}
+                }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
@@ -277,7 +277,7 @@ export default function PlannerPage() {
                     {new Date(chat.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                
+
                 <button
                   onClick={(e) => handleDeleteChat(chat.id, e)}
                   className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-all"
@@ -305,7 +305,7 @@ export default function PlannerPage() {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        
+
         {/* Chat Header */}
         <div className="bg-slate-800/50 backdrop-blur-xl border-b border-cyan-500/20 p-4 flex-shrink-0">
           <div className="flex items-center justify-between">
@@ -313,9 +313,10 @@ export default function PlannerPage() {
               {!showSidebar && (
                 <button
                   onClick={() => setShowSidebar(true)}
-                  className="text-gray-400 hover:text-white"
+                  className="text-gray-400 hover:text-white transition-colors"
+                  aria-label="Open sidebar"
                 >
-                  <Menu className="w-6 h-6" />
+                  <ChevronRight className="w-6 h-6" />
                 </button>
               )}
               <div>
@@ -341,18 +342,20 @@ export default function PlannerPage() {
 
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          
+
           {/* Welcome Message */}
           {currentChat?.messages.length === 0 && !loading && (
             <div className="text-center max-w-3xl mx-auto mt-10">
-              <div className="text-6xl mb-4">🚀</div>
+              <div className="mb-4">
+                <Rocket className="w-16 h-16 mx-auto text-cyan-400" />
+              </div>
               <h2 className="text-3xl font-bold text-white mb-2">
                 Welcome to Planexa AI
               </h2>
               <p className="text-gray-400 mb-8">
                 Powered by Gemini AI + Live Orbital Data (14,121+ satellites tracked)
               </p>
-              
+
               {/* Quick Start Examples */}
               <div className="text-left">
                 <h3 className="text-lg font-semibold text-cyan-400 mb-4">Quick Start Scenarios</h3>
@@ -365,7 +368,7 @@ export default function PlannerPage() {
                       className="p-4 bg-slate-800/50 hover:bg-slate-700/50 border border-cyan-500/20 hover:border-cyan-500/50 rounded-xl text-left transition-all group disabled:opacity-50"
                     >
                       <div className="flex items-start gap-3">
-                        <span className="text-2xl">💡</span>
+                        <Lightbulb className="w-6 h-6 text-cyan-400 flex-shrink-0 mt-0.5" />
                         <div className="flex-1">
                           <p className="font-semibold text-cyan-400 mb-1">{demo.label}</p>
                           <p className="text-sm text-gray-400 group-hover:text-gray-300">
@@ -387,7 +390,7 @@ export default function PlannerPage() {
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div className={`max-w-4xl ${message.role === 'user' ? 'w-auto' : 'w-full'}`}>
-                
+
                 {/* User Message */}
                 {message.role === 'user' && (
                   <div className="bg-cyan-600/30 border border-cyan-500/50 rounded-2xl px-6 py-4">
@@ -401,7 +404,7 @@ export default function PlannerPage() {
                 {/* Assistant Message */}
                 {message.role === 'assistant' && (
                   <div className="space-y-4">
-                    
+
                     {/* Error Message */}
                     {message.isError ? (
                       <div className="bg-red-900/30 border border-red-500/50 rounded-2xl px-6 py-4">
@@ -413,7 +416,7 @@ export default function PlannerPage() {
                         <div className="bg-slate-800/50 border border-slate-600 rounded-2xl px-6 py-4">
                           <div className="flex items-center gap-2 mb-2">
                             <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center">
-                              🤖
+                              <Rocket className="w-5 h-5 text-white" />
                             </div>
                             <span className="font-semibold text-white">Planexa AI</span>
                           </div>
@@ -426,7 +429,7 @@ export default function PlannerPage() {
                         {/* Mission Data Display */}
                         {message.missionData && (
                           <div className="space-y-4">
-                            
+
                             {/* Mission Summary */}
                             <div className="bg-gradient-to-r from-cyan-900/50 to-blue-900/50 rounded-xl p-5 border border-cyan-500/30">
                               <h3 className="text-2xl font-bold text-cyan-300 mb-2">
@@ -441,7 +444,7 @@ export default function PlannerPage() {
                             {message.missionData.live_data_sources?.length > 0 && (
                               <div className="bg-green-900/20 rounded-xl p-4 border border-green-500/30">
                                 <h3 className="font-semibold text-green-400 mb-3 flex items-center gap-2">
-                                  <span className="text-xl">🔴</span> Live Data Sources
+                                  <Database className="w-5 h-5" /> Live Data Sources
                                 </h3>
                                 <div className="grid grid-cols-1 gap-2">
                                   {message.missionData.live_data_sources.map((source, i) => (
@@ -499,7 +502,7 @@ export default function PlannerPage() {
                             {message.missionData.live_data_summary && (
                               <div className="bg-blue-900/20 rounded-xl p-4 border border-blue-500/30">
                                 <h3 className="font-semibold text-blue-400 mb-3 flex items-center gap-2">
-                                  <span className="text-xl">📊</span> Real-Time Space Data
+                                  <BarChart3 className="w-5 h-5" /> Real-Time Space Data
                                 </h3>
                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                   <div className="bg-slate-800/30 p-2 rounded">
@@ -516,11 +519,10 @@ export default function PlannerPage() {
                                   </div>
                                   <div className="bg-slate-800/30 p-2 rounded">
                                     <span className="text-gray-400 block text-xs">Debris Risk</span>
-                                    <span className={`font-medium ${
-                                      message.missionData.live_data_summary.debris_risk === 'High' ? 'text-red-400' :
-                                      message.missionData.live_data_summary.debris_risk === 'Medium' ? 'text-yellow-400' :
-                                      'text-green-400'
-                                    }`}>
+                                    <span className={`font-medium ${message.missionData.live_data_summary.debris_risk === 'High' ? 'text-red-400' :
+                                        message.missionData.live_data_summary.debris_risk === 'Medium' ? 'text-yellow-400' :
+                                          'text-green-400'
+                                      }`}>
                                       {message.missionData.live_data_summary.debris_risk}
                                     </span>
                                   </div>
@@ -540,7 +542,7 @@ export default function PlannerPage() {
                             {message.missionData.mission_lifetime && (
                               <div className="bg-purple-900/20 rounded-xl p-4 border border-purple-500/30">
                                 <h3 className="font-semibold text-purple-400 mb-2 flex items-center gap-2">
-                                  <span>⏱️</span> Mission Lifetime
+                                  <Clock className="w-5 h-5" /> Mission Lifetime
                                 </h3>
                                 <div className="flex justify-between items-center mb-2">
                                   <span className="text-gray-400 text-sm">Expected Duration:</span>
@@ -555,7 +557,7 @@ export default function PlannerPage() {
                             {/* Cost Estimator */}
                             <div className="bg-slate-800/50 rounded-xl p-5 border border-cyan-500/30">
                               <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                <span>💰</span> Cost Analysis
+                                <DollarSign className="w-5 h-5 text-cyan-400" /> Cost Analysis
                               </h4>
                               <CostEstimator missionData={message.missionData} />
                             </div>
@@ -563,7 +565,7 @@ export default function PlannerPage() {
                             {/* Coverage Map */}
                             <div className="bg-slate-800/50 rounded-xl p-5 border border-cyan-500/30">
                               <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                <span>🗺️</span> Coverage Map
+                                <Map className="w-5 h-5 text-cyan-400" /> Coverage Map
                               </h4>
                               <CoverageMap missionData={message.missionData} />
                             </div>
@@ -592,7 +594,10 @@ export default function PlannerPage() {
           {/* Error Display */}
           {error && (
             <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-4">
-              <p className="text-red-300">❌ {error}</p>
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-red-400" />
+                <p className="text-red-300">{error}</p>
+              </div>
             </div>
           )}
         </div>
