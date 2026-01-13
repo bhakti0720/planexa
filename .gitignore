@@ -1,0 +1,33 @@
+# Environment Variables
+.env
+*.env.local
+.env.production
+
+# Frontend
+mission-copilot-frontend/node_modules/
+mission-copilot-frontend/dist/
+mission-copilot-frontend/.vite/
+mission-copilot-frontend/package-lock.json
+
+# Backend
+mission-copilot-backend/__pycache__/
+mission-copilot-backend/venv/
+mission-copilot-backend/env/
+mission-copilot-backend/*.pyc
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+.pytest_cache/
