@@ -11,6 +11,10 @@ import time
 import math
 import random
 
+# MongoDB imports
+from app.services.database import connect_to_mongodb, close_mongodb_connection, check_mongodb_health
+from app.routers import missions, chats
+
 load_dotenv()  # Load .env file
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 # Add validation
@@ -24,6 +28,23 @@ client = genai.GenerativeModel('gemini-2.0-flash-exp')
 
 app = FastAPI(title="Mission Copilot - Live AI with Real Data")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+# Register MongoDB routers
+app.include_router(missions.router)
+app.include_router(chats.router)
+
+
+# Database lifecycle events
+@app.on_event("startup")
+async def startup_db_client():
+    """Connect to MongoDB on application startup"""
+    await connect_to_mongodb()
+
+
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    """Close MongoDB connection on application shutdown"""
+    await close_mongodb_connection()
 
 
 class MissionRequest(BaseModel):
@@ -769,9 +790,12 @@ IMPORTANT: Adjust altitude based on the live data context above. Avoid crowded a
 @app.get("/health")
 async def health():
     live_insights = fetch_and_analyze_live_data()
+    mongodb_health = await check_mongodb_health()
+    
     return {
         "status": "live",
         "gemini": "connected" if GEMINI_API_KEY != "YOUR_ACTUAL_KEY_HERE" else "no API key",
+        "mongodb": mongodb_health["status"],
         "celestrak": live_insights["sources_status"][0]["status"] if live_insights["sources_status"] else "unknown",
         "active_satellites": live_insights["satellite_count"],
         "solar_flux": live_insights["solar_flux"],
