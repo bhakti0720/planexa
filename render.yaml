@@ -1,0 +1,17 @@
+# Render Static Site Configuration
+# For deploying frontend on Render
+
+# Build settings
+buildCommand = "cd mission-copilot-frontend && npm install && npm run build"
+publishDir = "mission-copilot-frontend/dist"
+
+# Environment variables
+[[envVars]]
+  key = "VITE_API_URL"
+  value = "https://planexa.onrender.com"
+
+# Redirects for SPA
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
