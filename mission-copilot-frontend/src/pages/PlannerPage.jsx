@@ -661,7 +661,7 @@
 import { useState, useEffect } from 'react';
 import { generateMission } from '../services/api';
 import ChatHistory from '../components/ChatHistory';
-import { missionStorage } from '../hooks/useLocalStorage';
+import hybridStorage from '../services/hybridStorage';
 import { Download, RefreshCw, MessageSquare, Plus, Trash2, Send, Loader2, X, Menu } from 'lucide-react';
 import CostEstimator from '../components/CostEstimator';
 import CoverageMap from '../components/CoverageMap';
@@ -675,47 +675,40 @@ export default function PlannerPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showSidebar, setShowSidebar] = useState(true);
+  const [storageMode, setStorageMode] = useState('unknown'); // 'mongodb', 'localStorage', 'unknown'
 
 
-  // Load chats from localStorage on mount
+  // Load chats from hybrid storage on mount (MongoDB first, localStorage fallback)
   useEffect(() => {
-    const savedMissions = missionStorage.getAll();
+    const loadChats = async () => {
+      try {
+        console.log('🔄 Loading chats with hybrid storage...');
+        const { chats: loadedChats, source } = await hybridStorage.loadChats();
 
-    if (savedMissions.length > 0) {
-      // Convert old missions to chat format
-      const convertedChats = savedMissions.map(mission => ({
-        id: mission.id,
-        name: mission.query?.substring(0, 40) + '...' || 'Mission Chat',
-        messages: [
-          {
-            id: `${mission.id}-user`,
-            role: 'user',
-            content: mission.query,
-            timestamp: mission.timestamp
-          },
-          {
-            id: `${mission.id}-assistant`,
-            role: 'assistant',
-            content: 'Mission generated successfully!',
-            missionData: mission.data,
-            timestamp: mission.timestamp
-          }
-        ],
-        createdAt: mission.timestamp
-      }));
-      setChats(convertedChats);
-      setActiveChat(convertedChats[0].id);
-    } else {
-      // Create initial empty chat
-      const initialChat = {
-        id: Date.now(),
-        name: 'New Chat',
-        messages: [],
-        createdAt: new Date()
-      };
-      setChats([initialChat]);
-      setActiveChat(initialChat.id);
-    }
+        setStorageMode(source);
+        console.log(`✅ Loaded ${loadedChats.length} chats from ${source}`);
+
+        if (loadedChats.length > 0) {
+          setChats(loadedChats);
+          setActiveChat(loadedChats[0].id || loadedChats[0].chatId);
+        } else {
+          // Create initial empty chat
+          const initialChat = {
+            id: Date.now(),
+            name: 'New Chat',
+            messages: [],
+            createdAt: new Date().toISOString()
+          };
+          setChats([initialChat]);
+          setActiveChat(initialChat.id);
+        }
+      } catch (error) {
+        console.error('❌ Failed to load chats:', error);
+        setError('Failed to load chat history');
+      }
+    };
+
+    loadChats();
   }, []);
 
 
@@ -836,14 +829,14 @@ export default function PlannerPage() {
       setChats(finalChats);
 
 
-      // Save to localStorage
+      // Save to hybrid storage (MongoDB + localStorage)
       const chatToSave = finalChats.find(c => c.id === activeChat);
-      missionStorage.save({
-        id: activeChat,
-        query: messageContent,
-        data: missionData,
-        timestamp: new Date()
-      });
+      await hybridStorage.saveChat(
+        activeChat,
+        chatToSave.name,
+        chatToSave.messages
+      );
+      console.log('✅ Chat saved to hybrid storage');
 
 
     } catch (err) {
@@ -940,8 +933,8 @@ export default function PlannerPage() {
               key={chat.id}
               onClick={() => setActiveChat(chat.id)}
               className={`group p-3 rounded-lg cursor-pointer transition-all ${activeChat === chat.id
-                  ? 'bg-cyan-600/30 border border-cyan-500/50'
-                  : 'bg-slate-700/30 hover:bg-slate-700/50 border border-transparent'
+                ? 'bg-cyan-600/30 border border-cyan-500/50'
+                : 'bg-slate-700/30 hover:bg-slate-700/50 border border-transparent'
                 }`}
             >
               <div className="flex items-start justify-between">
@@ -977,9 +970,24 @@ export default function PlannerPage() {
           >
             Clear All Chats
           </button>
-          <p className="text-xs text-gray-400 text-center">
-            {chats.length} chat{chats.length !== 1 ? 's' : ''} • Live Data Powered
-          </p>
+          <div className="flex items-center justify-between text-xs text-gray-400">
+            <span>{chats.length} chat{chats.length !== 1 ? 's' : ''}</span>
+            <span className="flex items-center gap-1">
+              {storageMode === 'mongodb' ? (
+                <>
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                  <span>Cloud Sync</span>
+                </>
+              ) : storageMode === 'localStorage' ? (
+                <>
+                  <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                  <span>Offline Mode</span>
+                </>
+              ) : (
+                <span>Loading...</span>
+              )}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -1206,8 +1214,8 @@ export default function PlannerPage() {
                                   <div className="bg-slate-800/30 p-2 rounded">
                                     <span className="text-gray-400 block text-xs">Debris Risk</span>
                                     <span className={`font-medium ${message.missionData.live_data_summary.debris_risk === 'High' ? 'text-red-400' :
-                                        message.missionData.live_data_summary.debris_risk === 'Medium' ? 'text-yellow-400' :
-                                          'text-green-400'
+                                      message.missionData.live_data_summary.debris_risk === 'Medium' ? 'text-yellow-400' :
+                                        'text-green-400'
                                       }`}>
                                       {message.missionData.live_data_summary.debris_risk}
                                     </span>
@@ -1495,8 +1503,8 @@ export default function PlannerPage() {
                                     <div className="flex items-center justify-between mb-2">
                                       <span className="font-semibold text-white">Technical Risk</span>
                                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${message.missionData.risks.technical.toLowerCase().includes('high') ? 'bg-red-500/30 text-red-300' :
-                                          message.missionData.risks.technical.toLowerCase().includes('medium') ? 'bg-yellow-500/30 text-yellow-300' :
-                                            'bg-green-500/30 text-green-300'
+                                        message.missionData.risks.technical.toLowerCase().includes('medium') ? 'bg-yellow-500/30 text-yellow-300' :
+                                          'bg-green-500/30 text-green-300'
                                         }`}>
                                         {message.missionData.risks.technical.split('-')[0].trim()}
                                       </span>
@@ -1514,8 +1522,8 @@ export default function PlannerPage() {
                                     <div className="flex items-center justify-between mb-2">
                                       <span className="font-semibold text-white">Financial Risk</span>
                                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${message.missionData.risks.financial.toLowerCase().includes('high') ? 'bg-red-500/30 text-red-300' :
-                                          message.missionData.risks.financial.toLowerCase().includes('medium') ? 'bg-yellow-500/30 text-yellow-300' :
-                                            'bg-green-500/30 text-green-300'
+                                        message.missionData.risks.financial.toLowerCase().includes('medium') ? 'bg-yellow-500/30 text-yellow-300' :
+                                          'bg-green-500/30 text-green-300'
                                         }`}>
                                         {message.missionData.risks.financial.split('-')[0].trim()}
                                       </span>
@@ -1533,8 +1541,8 @@ export default function PlannerPage() {
                                     <div className="flex items-center justify-between mb-2">
                                       <span className="font-semibold text-white">Schedule Risk</span>
                                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${message.missionData.risks.schedule.toLowerCase().includes('high') ? 'bg-red-500/30 text-red-300' :
-                                          message.missionData.risks.schedule.toLowerCase().includes('medium') ? 'bg-yellow-500/30 text-yellow-300' :
-                                            'bg-green-500/30 text-green-300'
+                                        message.missionData.risks.schedule.toLowerCase().includes('medium') ? 'bg-yellow-500/30 text-yellow-300' :
+                                          'bg-green-500/30 text-green-300'
                                         }`}>
                                         {message.missionData.risks.schedule.split('-')[0].trim()}
                                       </span>
