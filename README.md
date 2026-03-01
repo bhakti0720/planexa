@@ -1,7 +1,4 @@
 
-## **🚀 PERFECT README.md WITH YOUR EXACT FILE STRUCTURE**
-
-```markdown
 <div align="center">
 
 # 🛰️ Planexa - AI Mission Planner
